@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengumuman Calon Anggota</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      text-align: center;
+      width: 350px;
+      animation: fadeIn 0.6s ease;
+      position: relative;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    h1 {
+      color: #1e3a8a;
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: 0.3s;
+    }
+    input:focus {
+      border-color: #2563eb;
+      outline: none;
+      box-shadow: 0 0 6px rgba(37,99,235,0.5);
+    }
+    button {
+      background: #1e40af;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 10px;
+      width: 100%;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+    }
+    /* Loading Animation */
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #ddd;
+      border-top-color: #1e40af;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0); }
+      to { transform: rotate(360deg); }
+    }
+    .loading p {
+      color: #1e3a8a;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    /* Popup Overlay */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeBg 0.3s ease;
+    }
+    @keyframes fadeBg {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Popup Box */
+    .popup-box {
+      background: white;
+      border-radius: 15px;
+      padding: 2rem;
+      width: 320px;
+      text-align: center;
+      animation: pop 0.4s ease;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    @keyframes pop {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .popup-box h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.8rem;
+    }
+    .popup-box.lolos h2 {
+      color: #1e40af;
+    }
+    .popup-box.tidak h2 {
+      color: #dc2626;
+    }
+    .popup-box p {
+      font-size: 1rem;
+      color: #374151;
+    }
+    .popup-box button {
+      margin-top: 1rem;
+      background: #1e3a8a;
+      color: white;
+      padding: 10px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .popup-box button:hover {
+      background: #1d4ed8;
+    }
+    .wa-button {
+      display: inline-block;
+      background-color: #25d366;
+      color: white;
+      padding: 10px 25px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 10px;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+    .wa-button:hover {
+      background-color: #1da851;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pengumuman Calon Anggota</h1>
+    <input type="text" id="username" placeholder="Masukkan Username">
+    <input type="password" id="password" placeholder="Masukkan Password">
+    <button onclick="cekData()">Cek Data</button>
+
+    <!-- Loading Animation -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Memeriksa data...</p>
+    </div>
+  </div>
+
+  <!-- Popup -->
+  <div id="popup" class="popup-overlay">
+    <div id="popupBox" class="popup-box">
+      <h2 id="popupTitle"></h2>
+      <p id="popupMessage"></p>
+      <a id="waButton" class="wa-button" href="#" target="_blank" style="display:none;">Gabung WhatsApp</a>
+      <br>
+      <button onclick="closePopup()">Tutup</button>
+    </div>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzjiMEUWevlFeso6-UnYxpcAYsP_NjgLjfbsD46TArpG7zzN54rqWLXJ97g5BP6E0ZU/exec";
+    const waLink = "https://chat.whatsapp.com/K8dv8uSC5p78cCZHDTHAhG?mode=wwt"; // 🟢 GANTI DENGAN LINK WHATSAPP KAMU
+
+    async function cekData() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const loading = document.getElementById("loading");
+      const btn = document.querySelector("button");
+
+      if (!username || !password) {
+        showPopup("Gagal", "Harap isi semua kolom!", "tidak");
+        return;
+      }
+
+      loading.style.display = "flex";
+      btn.disabled = true;
+
+      try {
+        const response = await fetch(`${scriptURL}?action=cek&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+        const result = await response.json();
+
+        loading.style.display = "none";
+        btn.disabled = false;
+
+        if (result.status === "lolos") {
+          showPopup("Selamat!", "Anda dinyatakan LOLOS seleksi calon anggota! Silakan bergabung ke grup WhatsApp.", "lolos", true);
+        } else if (result.status === "tidak" || result.status === "tidak_lulus") {
+          showPopup("Maaf", "Anda BELUM LOLOS seleksi. Tetap semangat!", "tidak");
+        } else if (result.status === "notfound") {
+          showPopup("Gagal", "Username atau password salah.", "tidak");
+        } else {
+          showPopup("Error", "Terjadi kesalahan pada server.", "tidak");
+        }
+      } catch (error) {
+        loading.style.display = "none";
+        btn.disabled = false;
+        showPopup("Koneksi Error", "Terjadi kesalahan koneksi ke server.", "tidak");
+        console.error(error);
+      }
+    }
+
+    function showPopup(title, message, type, showWA = false) {
+      const popup = document.getElementById("popup");
+      const popupBox = document.getElementById("popupBox");
+      const popupTitle = document.getElementById("popupTitle");
+      const popupMessage = document.getElementById("popupMessage");
+      const waButton = document.getElementById("waButton");
+
+      popupTitle.textContent = title;
+      popupMessage.textContent = message;
+      popupBox.classList.remove("lolos", "tidak");
+      popupBox.classList.add(type);
+
+      if (showWA) {
+        waButton.style.display = "inline-block";
+        waButton.href = waLink;
+      } else {
+        waButton.style.display = "none";
+      }
+
+      popup.style.display = "flex";
+    }
+
+    function closePopup() {
+      document.getElementById("popup").style.display = "none";
+    }
+  </script>
+</body>
+</html>
